@@ -1,0 +1,32 @@
+name: Build and Push Container Image
+
+on:
+  push:
+    tags:
+      - '*'  # 触发所有 tag 推送
+
+env:
+  REGISTRY: xhj-prod-registry-vpc.cn-hangzhou.cr.aliyuncs.com
+  REPO_PREFIX: xhj-image
+  IMAGE_MIRROR: docker.1ms.run
+  APT_MIRROR: mirrors.aliyun.com
+
+jobs:
+  build-and-push:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/buildah/stable:latest
+      options: --privileged
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build and push image
+        env:
+          DRONE_TAG: ${{ github.ref_name }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          sh deploy/build-image.sh
